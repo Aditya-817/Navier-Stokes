@@ -1,0 +1,75 @@
+
+# ============================================================
+# Base config — all fields shown with their defaults.
+# Override in experiment-specific configs.
+# ============================================================
+
+experiment:
+  name: "unnamed"
+  seed: 42
+  dtype: "float64"        # float32 or float64
+
+domain:
+  L: 6.283185307179586    # 2π
+  T: 1.0                  # temporal horizon
+
+physics:
+  nu: 0.1                 # kinematic viscosity (Re ~ 10 for TGV at k=1, V0=1)
+
+initial_condition:
+  type: "taylor_green"    # taylor_green | abc | fourier_random
+  # TGV params
+  V0: 1.0
+  k: 1
+  # ABC params (used if type=abc)
+  # A: 2.449489...   B: 1.414...   C: 1.732...
+  # Fourier random params (used if type=fourier_random)
+  # K: 4
+  # alpha: 1.6667
+  # rng_seed: 42
+
+model:
+  type: "fourier_resmlp"  # fourier_resmlp | standard_mlp
+  fourier_modes: 8        # max per-component wavenumber K
+  hidden_width: 256
+  n_layers: 3
+  activation: "tanh"      # tanh | gelu | silu | sin | relu
+  use_layernorm: true
+  skip_period: 1
+  output_repr: "uvwp"
+  trainable_freqs: false  # keep false for structural periodicity guarantee
+
+training:
+  n_collocation: 20000
+  n_ic_points: 5000
+  sampler: "uniform"      # uniform | lhs | sobol
+  optimizer: "adamw"
+  lr: 1.0e-3
+  lr_min: 1.0e-6
+  lr_schedule: "cosine"
+  max_epochs: 50000
+  grad_clip: 1.0
+  checkpoint_interval: 2000
+  log_interval: 100
+  resample_interval: 1000
+  loss_weights:
+    mode: "fixed"
+    pde: 1.0
+    ic: 10.0
+    div: 1.0
+    gauge: 1.0
+
+reference_solver:
+  N: 64                   # grid resolution (N^3)
+  dt: 0.001
+  dealias: true
+  snapshot_times: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+evaluation:
+  n_eval_points: 10000
+  save_fields: true
+
+logging:
+  backend: "tensorboard"  # tensorboard | none
+  log_dir: "results/"
+  checkpoint_dir: "checkpoints/"

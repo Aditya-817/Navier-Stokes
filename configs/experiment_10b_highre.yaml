@@ -1,0 +1,71 @@
+# configs/experiment_10b_highre.yaml
+# ============================================================
+# Experiment 10b — Very high Reynolds: ν=0.005, Re≈200
+# ============================================================
+
+experiment:
+  name: "highre_tgv_re200"
+  seed: 42
+  dtype: "float64"
+
+domain:
+  L: 6.283185307179586
+  T: 0.5                  # shorter horizon — dynamics more complex
+
+physics:
+  nu: 0.005
+
+initial_condition:
+  type: "taylor_green"
+  V0: 1.0
+  k: 1
+
+model:
+  type: "fourier_resmlp"
+  fourier_modes: 16
+  hidden_width: 512
+  n_layers: 5
+  activation: "tanh"
+  use_layernorm: true
+  skip_period: 1
+  trainable_freqs: false
+
+training:
+  n_collocation: 60000
+  n_ic_points: 10000
+  sampler: "sobol"
+  curriculum:
+    enabled: true
+    n_windows: 5
+    epochs_per_window: 20000
+    overlap: 0.1
+    causal_eps: 3.0
+  optimizer: "adamw"
+  lr: 2.0e-4
+  lr_min: 1.0e-8
+  lr_schedule: "cosine"
+  max_epochs: 100000
+  grad_clip: 0.5
+  checkpoint_interval: 5000
+  log_interval: 500
+  resample_interval: 2000
+  loss_weights:
+    mode: "fixed"
+    pde: 1.0
+    ic: 50.0
+    div: 10.0
+    gauge: 1.0
+
+reference_solver:
+  N: 256
+  dt: 0.0002
+  dealias: true
+  snapshot_times: [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+
+evaluation:
+  save_fields: true
+
+logging:
+  backend: "tensorboard"
+  log_dir: "results/highre_tgv_re200"
+  checkpoint_dir: "results/highre_tgv_re200/checkpoints"

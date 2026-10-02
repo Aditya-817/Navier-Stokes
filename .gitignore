@@ -1,0 +1,37 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.eggs/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Data and results
+data/*.h5
+data/*.zarr
+results/*/
+!results/demo/
+checkpoints/
+experiments/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# TensorBoard logs
+runs/
+tensorboard/
+
+# W&B
+wandb/
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/

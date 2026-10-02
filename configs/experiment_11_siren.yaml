@@ -1,0 +1,64 @@
+# configs/experiment_11_siren.yaml
+# ============================================================
+# Experiment 11 — Architecture comparison: SIREN
+# Same TGV baseline as Experiment 01, but using SIREN instead
+# of FourierResMLP. Allows direct comparison of architectures.
+# ============================================================
+
+experiment:
+  name: "siren_tgv_baseline"
+  seed: 42
+  dtype: "float64"
+
+domain:
+  L: 6.283185307179586
+  T: 1.0
+
+physics:
+  nu: 0.1
+
+initial_condition:
+  type: "taylor_green"
+  V0: 1.0
+  k: 1
+
+model:
+  type: "siren"
+  fourier_modes: 8          # structural Fourier embedding (periodicity)
+  hidden_width: 256
+  n_layers: 4
+  omega_0: 30.0             # SIREN frequency parameter
+  dtype: "float64"
+
+training:
+  n_collocation: 20000
+  n_ic_points: 5000
+  sampler: "uniform"
+  optimizer: "adam"         # SIREN works better with Adam (no weight decay)
+  lr: 1.0e-4                # SIRENs require lower LR than standard MLPs
+  lr_min: 1.0e-7
+  lr_schedule: "cosine"
+  max_epochs: 50000
+  grad_clip: 1.0
+  checkpoint_interval: 2000
+  log_interval: 100
+  loss_weights:
+    mode: "fixed"
+    pde: 1.0
+    ic: 10.0
+    div: 1.0
+    gauge: 1.0
+
+reference_solver:
+  N: 64
+  dt: 0.001
+  dealias: true
+  snapshot_times: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+evaluation:
+  save_fields: true
+
+logging:
+  backend: "tensorboard"
+  log_dir: "results/siren_tgv_baseline"
+  checkpoint_dir: "results/siren_tgv_baseline/checkpoints"

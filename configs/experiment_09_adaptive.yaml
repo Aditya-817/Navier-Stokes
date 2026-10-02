@@ -1,0 +1,78 @@
+# configs/experiment_09_adaptive.yaml
+# ============================================================
+# Experiment 09 — Adaptive sampling + causal curriculum
+# Same physics as baseline (TGV, ν=0.1) but with:
+#   - Residual-based adaptive point resampling (RAR)
+#   - 5 sequential time windows with causal weighting
+# ============================================================
+
+experiment:
+  name: "adaptive_tgv_curriculum"
+  seed: 42
+  dtype: "float64"
+
+domain:
+  L: 6.283185307179586    # 2π
+  T: 1.0
+
+physics:
+  nu: 0.1
+
+initial_condition:
+  type: "taylor_green"
+  V0: 1.0
+  k: 1
+
+model:
+  type: "fourier_resmlp"
+  fourier_modes: 8
+  hidden_width: 256
+  n_layers: 3
+  activation: "tanh"
+  use_layernorm: true
+  skip_period: 1
+  trainable_freqs: false
+
+training:
+  n_collocation: 20000
+  n_ic_points: 5000
+  sampler: "adaptive"           # use adaptive resampling
+  adaptive:
+    n_candidate: 80000
+    uniform_fraction: 0.5
+    power: 1.0
+  curriculum:
+    enabled: true
+    n_windows: 5
+    epochs_per_window: 10000
+    overlap: 0.2
+    causal_eps: 2.0             # causal decay rate ε
+  optimizer: "adamw"
+  lr: 1.0e-3
+  lr_min: 1.0e-6
+  lr_schedule: "cosine"
+  max_epochs: 50000
+  grad_clip: 1.0
+  checkpoint_interval: 2000
+  log_interval: 100
+  resample_interval: 500        # resample every 500 epochs
+  loss_weights:
+    mode: "fixed"
+    pde: 1.0
+    ic: 10.0
+    div: 1.0
+    gauge: 1.0
+
+reference_solver:
+  N: 64
+  dt: 0.001
+  dealias: true
+  snapshot_times: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+evaluation:
+  save_fields: true
+
+logging:
+  backend: "tensorboard"
+  log_dir: "results/adaptive_tgv_curriculum"
+  checkpoint_dir: "results/adaptive_tgv_curriculum/checkpoints"
